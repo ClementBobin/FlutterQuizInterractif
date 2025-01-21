@@ -6,7 +6,10 @@ import '../http/api_prepare_requests.dart';
 import 'dart:convert';
 
 class QuizPage extends StatefulWidget {
-  const QuizPage({Key? key}) : super(key: key);
+  final int quizId;
+  final int quizCountOfQuestions;
+
+  const QuizPage({Key? key, required this.quizId, required this.quizCountOfQuestions}) : super(key: key);
 
   @override
   _QuizPageState createState() => _QuizPageState();
@@ -32,7 +35,7 @@ class _QuizPageState extends State<QuizPage> {
     });
 
     try {
-      final response = await makeRequest(_session, 'GET', 'http://127.0.0.1:8000/api/question/$_currentQuestionIndex');
+      final response = await makeRequest(_session, 'GET', 'http://127.0.0.1:8000/api/quiz/${widget.quizId}/question/$_currentQuestionIndex');
       setState(() {
         _currentQuestion = Question.fromJson(response);
         _isLoading = false;
@@ -43,10 +46,15 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   Future<void> _submitAnswer() async {
+    if (_currentQuestion == null) {
+      print('No current question to submit.');
+      return;
+    }
+
     final response = await makeRequest(
       _session,
       'POST',
-      'http://127.0.0.1:8000/api/submit',
+      'http://127.0.0.1:8000/api/quiz/${widget.quizId}/submit',
       body: jsonEncode({
         'questionIndex': _currentQuestion!.id,
         'selectedIndices': _selectedIndices,
@@ -56,13 +64,12 @@ class _QuizPageState extends State<QuizPage> {
     setState(() {
       _score = _score + (response['score'] as int);
     });
-    
 
     _nextQuestion();
   }
 
   void _nextQuestion() {
-    if (_currentQuestionIndex < 4) { // Assuming there are 5 questions
+    if (_currentQuestionIndex < widget.quizCountOfQuestions - 1) {
       setState(() {
         _currentQuestionIndex++;
         _selectedIndices = [];
@@ -72,7 +79,7 @@ class _QuizPageState extends State<QuizPage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ResultsPage(score: _score, totalQuestions: 5),
+          builder: (context) => ResultsPage(score: _score, totalQuestions: widget.quizCountOfQuestions, quizId: widget.quizId),
         ),
       );
     }

@@ -4,8 +4,9 @@ import 'quiz_page.dart';
 class ResultsPage extends StatelessWidget {
   final int score;
   final int totalQuestions;
+  final int quizId;
 
-  const ResultsPage({Key? key, required this.score, required this.totalQuestions}) : super(key: key);
+  const ResultsPage({Key? key, required this.score, required this.totalQuestions, required this.quizId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +44,7 @@ class ResultsPage extends StatelessWidget {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => QuizPage(),
+                    builder: (context) => QuizPage(quizId: quizId, quizCountOfQuestions: totalQuestions),
                   ),
                 );
               },
