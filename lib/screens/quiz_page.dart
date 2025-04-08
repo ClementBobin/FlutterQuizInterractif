@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../models/question.dart';
 import 'results_page.dart';
 
@@ -15,6 +17,48 @@ class _QuizPageState extends State<QuizPage> {
   int _currentQuestionIndex = 0;
   int _score = 0;
   List<int> _selectedIndices = [];
+  late AudioPlayer _correctSoundPlayer;
+  late AudioPlayer _wrongSoundPlayer;
+
+  @override
+  void initState() {
+    super.initState();
+    _initAudioPlayers();
+  }
+
+  Future<void> _initAudioPlayers() async {
+    _correctSoundPlayer = AudioPlayer();
+    _wrongSoundPlayer = AudioPlayer();
+  }
+
+  @override
+  void dispose() {
+    _correctSoundPlayer.dispose();
+    _wrongSoundPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> _playCorrectAnswerFeedback() async {
+    try {
+      // play sound
+      await _correctSoundPlayer.play(AssetSource('correct_answer.mp3'));
+      // vibrate with medium impact for correct answer
+      HapticFeedback.mediumImpact();
+    } catch (e) {
+      debugPrint('error playing correct sound: $e');
+    }
+  }
+
+  Future<void> _playWrongAnswerFeedback() async {
+    try {
+      // play sound
+      await _wrongSoundPlayer.play(AssetSource('wrong_answer.mp3'));
+      // vibrate with heavy impact for wrong answer
+      HapticFeedback.heavyImpact();
+    } catch (e) {
+      debugPrint('error playing wrong sound: $e');
+    }
+  }
 
   void _nextQuestion() {
     if (_currentQuestionIndex < widget.questions.length - 1) {
@@ -36,6 +80,9 @@ class _QuizPageState extends State<QuizPage> {
     final correctAnswers = widget.questions[_currentQuestionIndex].correctAnswerIndices;
     if (_selectedIndices.toSet().containsAll(correctAnswers) && correctAnswers.toSet().containsAll(_selectedIndices)) {
       _score++;
+      _playCorrectAnswerFeedback();
+    } else {
+      _playWrongAnswerFeedback();
     }
     _nextQuestion();
   }

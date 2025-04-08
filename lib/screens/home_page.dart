@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../models/question.dart';
 import 'quiz_page.dart';
 
@@ -45,6 +46,28 @@ class _MyHomePageState extends State<MyHomePage> {
     ),
   ];
 
+  late AudioPlayer _launchSoundPlayer;
+
+  @override
+  void initState() {
+    super.initState();
+    _launchSoundPlayer = AudioPlayer();
+  }
+
+  @override
+  void dispose() {
+    _launchSoundPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> _playLaunchSound() async {
+    try {
+      await _launchSoundPlayer.play(AssetSource('launch.mp3'));
+    } catch (e) {
+      debugPrint('error playing launch sound: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,13 +77,16 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Center(
         child: ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => QuizPage(questions: sampleQuestions),
-              ),
-            );
+          onPressed: () async {
+            await _playLaunchSound();
+            if (mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => QuizPage(questions: sampleQuestions),
+                ),
+              );
+            }
           },
           child: const Text('Start Quiz'),
         ),
